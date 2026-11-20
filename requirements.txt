@@ -1,0 +1,4 @@
+# Stdlib only — no third-party dependencies.
+# Python 3.10+ (developed/tested on 3.12).
+# Meko is accessed over HTTPS via the MCP endpoint with urllib;
+# the burner wallet uses pure-Python Keccak-256 + secp256k1 (quest_agent/keccak.py).
