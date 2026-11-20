@@ -1,0 +1,121 @@
+=== CONTEXT CON demo run — 2026-11-20 ===
+date: 2026-11-20T16:48:19Z / 2026-11-20 23:48 WIB
+python: Python 3.12.3
+
+=== 1. python3 -m quest_agent demo ===
+== 1. Setup ==
+Seeded 6 quests.
+Burner wallet: 0x635cf7023FA63F01EC6D1C3242d10142562B7D36 (already existed)
+Memory mode: local (local mirror — set MEKO_API_KEY to use Meko Cloud)
+Never share the burner private key. It lives in data/burner_wallet.json (0600).
+
+== 2. Chat (agent recalls memory, suggests next quest) ==
+I don't have a relevant memory for that yet — I'll remember what you tell me.
+Progress: 0/6 quests done, 0/65 points.
+Next quest: Daily check-in streak (7 days) (quest-daily-checkin) — Check in once a day for 7 days. The agent remembers the streak across sessions — that is the shared-memory demo. Next step: Check in day 1.
+
+== 3. Start + complete the daily check-in quest ==
+{
+  "ok": true,
+  "quest": {
+    "id": "quest-daily-checkin",
+    "title": "Daily check-in streak (7 days)",
+    "category": "habit",
+    "chain": "off-chain",
+    "description": "Check in once a day for 7 days. The agent remembers the streak across sessions — that is the shared-memory demo.",
+    "steps_json": "[\"Check in day 1\", \"Check in day 2\", \"Check in day 3\", \"Check in day 4\", \"Check in day 5\", \"Check in day 6\", \"Check in day 7\"]",
+    "reward_points": 15,
+    "risk_note": "No funds involved.",
+    "status": "in_progress",
+    "steps_done": 0,
+    "steps": [
+      "Check in day 1",
+      "Check in day 2",
+      "Check in day 3",
+      "Check in day 4",
+      "Check in day 5",
+      "Check in day 6",
+      "Check in day 7"
+    ]
+  }
+}
+{
+  "ok": true,
+  "completed": true,
+  "memory_saved_to_meko": false
+}
+
+== 4. Recall in a fresh agent instance (memory survives sessions) ==
+[local] User completed quest 'Daily check-in streak (7 days)' (quest-daily-checkin) on off-chain with burner wallet 0x635cf7023FA63F01EC6D1C3242d10142562B7D36. Earned 15 points.
+
+== 5. Status ==
+{
+  "total": 6,
+  "done": 1,
+  "in_progress": 0,
+  "todo": 5,
+  "points": 15,
+  "total_points": 65
+}
+exit=0
+
+=== 2. python3 -m quest_agent status ===
+{
+  "mode": "local",
+  "meko_datapack": "(default datapack)",
+  "wallet": {
+    "address": "0x635cf7023FA63F01EC6D1C3242d10142562B7D36",
+    "network": "testnet-only",
+    "private_key_preview": "69a6…b738 (stored locally, mode 0600, never shown in full)"
+  },
+  "progress": {
+    "total": 6,
+    "done": 1,
+    "in_progress": 0,
+    "todo": 5,
+    "points": 15,
+    "total_points": 65
+  },
+  "next_quest": {
+    "id": "quest-join-community",
+    "title": "Join the community (Discord / Telegram)"
+  },
+  "recent_memories": [
+    {
+      "text": "User completed quest 'Daily check-in streak (7 days)' (quest-daily-checkin) on off-chain with burner wallet 0x635cf7023FA63F01EC6D1C3242d10142562B7D36. Earned 15 points.",
+      "source": "local"
+    }
+  ]
+}
+exit=0
+
+=== 3. python3 -m unittest discover -s tests -v ===
+test_chat_suggests_next_quest (test_agent.TestQuestAgent.test_chat_suggests_next_quest) ... ok
+test_complete_quest_remembers_it (test_agent.TestQuestAgent.test_complete_quest_remembers_it) ... ok
+test_decision_traces_recorded (test_agent.TestQuestAgent.test_decision_traces_recorded) ... ok
+test_seed_and_status (test_agent.TestQuestAgent.test_seed_and_status) ... ok
+test_unknown_quest (test_agent.TestQuestAgent.test_unknown_quest) ... ok
+test_generate_and_reload (test_wallet.TestBurnerWallet.test_generate_and_reload) ... ok
+test_abc (test_wallet.TestKeccak.test_abc) ... ok
+test_empty (test_wallet.TestKeccak.test_empty) ... ok
+test_privkey_1_address (test_wallet.TestKeccak.test_privkey_1_address) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.316s
+
+OK
+exit=0
+
+=== 4. Web server test (serve + curl) ===
+GET / -> HTTP 200, 2480 bytes, title 'Quest Agent — ContextCon'
+GET /api/status -> 200, mode=local, progress 1/6 done, 15/65 pts, wallet 0x635cf7023FA63F01EC6D1C3242d10142562B7D36
+GET /api/quests -> 200, 6 quests (quest-daily-checkin done 7/7; 5 todo)
+GET /api/traces -> 200, decision traces present (id 9: Completed quest quest-daily-checkin)
+POST /api/chat -> 200, suggests next quest quest-join-community
+Server stopped cleanly after test (connection refused on re-check = OK).
+
+=== 5. Demo video DRAFT (built 2026-11-20 ~23:54 WIB) ===
+docs/demo-draft.mp4 — 1280x720, 30 fps, H.264 + silent AAC, 230.07 s (3:50), 2,214,600 bytes.
+6 slides from docs/demo-frames/frame-1.png .. frame-6.png, durations 25/30/60/45/45/25 s.
+DRAFT: silent slideshow, no voiceover, frame 5 is a slide (not a real browser capture).
+Narration: docs/DEMO_NARRATION.md. Storyboard: docs/DEMO_STORYBOARD.md.
