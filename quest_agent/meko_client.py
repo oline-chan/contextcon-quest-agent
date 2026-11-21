@@ -204,7 +204,11 @@ class MekoClient:
     def memory_add(self, text, metadata=None):
         args = self._base_args({"text": text})
         if metadata:
-            args["metadata"] = metadata
+            # Meko MCP server v3.2.4 validates `metadata` as a string; a dict
+            # is rejected (pydantic string_type error). Serialise it so the
+            # quest-completion write actually reaches Meko instead of
+            # silently falling back to the local mirror.
+            args["metadata"] = metadata if isinstance(metadata, str) else json.dumps(metadata)
         return self.call_tool("memory_add", args)
 
     def memory_search(self, query, limit=5):

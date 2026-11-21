@@ -65,7 +65,12 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def _agent(self):
+        # Same pattern as the CLI: config values are bound at import time,
+        # so re-read .env and reload the module or the server would report
+        # "local" mode even with a key in .env (fixed 2026-11-21).
         config.load_dotenv()
+        import importlib
+        importlib.reload(config)
         return agent_mod.QuestAgent()
 
     def _send_json(self, obj, status=200):
