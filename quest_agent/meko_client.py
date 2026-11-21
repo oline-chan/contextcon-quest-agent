@@ -52,6 +52,30 @@ class MekoClient:
         self._session_id = None
         self._next_id = 1
         self._initialized = False
+        self._conversation_id = None
+
+    def ensure_conversation(self, title="quest-agent session"):
+        """Lazily create one Meko conversation for this client and reuse it.
+
+        Meko MCP server v3.2.4 scopes the memory/datapack tools to a
+        conversation: every call needs ``conversation_id`` (verified
+        2026-11-21 — datapack_list/memory_add without one fail validation).
+        """
+        if self._conversation_id:
+            return self._conversation_id
+        out = self.call_tool("conversation_create", {
+            "agent_id": config.MEKO_AGENT_ID,
+            "title": title,
+        })
+        try:
+            parsed = json.loads(out)
+            cid = parsed.get("conversation_id") or parsed.get("id")
+        except (ValueError, TypeError):
+            cid = None
+        if not cid:
+            raise MekoError("could not create a Meko conversation")
+        self._conversation_id = cid
+        return cid
 
     # -- transport ---------------------------------------------------------
     def _post(self, payload, extra_headers=None):
@@ -160,7 +184,10 @@ class MekoClient:
 
     # -- Meko tools used by this project -----------------------------------
     def _base_args(self, extra=None):
-        args = {"agent_id": config.MEKO_AGENT_ID}
+        # Conversation-scoped: the server rejects agent_id on the memory /
+        # datapack tools and requires conversation_id (see ensure_conversation).
+        # An explicit conversation_id in `extra` wins over the cached one.
+        args = {"conversation_id": self.ensure_conversation()}
         if self.datapack_id:
             args["datapack_id"] = self.datapack_id
         if extra:
@@ -195,7 +222,10 @@ class MekoClient:
             return {"raw": out}
 
     def conversation_create(self, title, session_id=None):
-        args = self._base_args({"title": title})
+        # Built directly, NOT via _base_args: _base_args itself creates a
+        # conversation, so routing through it here would spawn a spare one.
+        # agent_id is accepted on this tool (unlike the memory tools).
+        args = {"agent_id": config.MEKO_AGENT_ID, "title": title}
         if session_id:
             args["session_id"] = session_id
         out = self.call_tool("conversation_create", args)
